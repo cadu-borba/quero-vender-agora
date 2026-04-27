@@ -334,7 +334,7 @@
   /* ============================================================
      CONFIGURAÇÃO: Cole aqui a URL do seu Google Apps Script
   ============================================================ */
-  https://script.google.com/macros/s/AKfycbz9AVvcpVAX2jgCOTQXGURKCogt2XTe4g4yfVyIxaPhAC_zyk8WOIoJ_2qr9cwWNNhp/exec
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbz9AVvcpVAX2jgCOTQXGURKCogt2XTe4g4yfVyIxaPhAC_zyk8WOIoJ_2qr9cwWNNhp/exec';
   /* ============================================================ */
 
   let currentStep=1, selectedDate=null, selectedTime=null, calYear, calMonth;
@@ -502,24 +502,18 @@
       visita:          (selectedDate&&selectedTime)?formatDatePT(selectedDate)+' às '+selectedTime:''
     };
 
-    try {
-      const params = new URLSearchParams(payload);
-      params.set('callback', 'jsonpCallback');
-      const url = SHEET_URL + '?' + params.toString();
-      let done = false;
-      window.jsonpCallback = function() { if(!done){ done=true; showSuccess(); } };
-      const script = document.createElement('script');
-      script.id = 'jsonp-script';
-      script.src = url;
-      script.onerror = function() { if(!done){ done=true; showSuccess(); } script.remove(); };
-      document.body.appendChild(script);
-      // fallback após 6s
-      setTimeout(function(){ if(!done){ done=true; showSuccess(); } }, 6000);
-    } catch(e) {
+    fetch(SHEET_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(function() {
+      showSuccess();
+    }).catch(function() {
       btn.disabled = false;
       status.className = 'send-status error';
       status.textContent = 'Erro ao enviar. Verifique sua conexão e tente novamente.';
-    }
+    });
   }
 
   function showSuccess() {
